@@ -2,8 +2,8 @@ var Sequelize = require('sequelize');
 
 
 // adds a UserId foreign key to the `Tweet` table
-User.hasMany(Tweet);
-Tweet.belongsTo(User);
+// User.hasMany(Tweet);
+// Tweet.belongsTo(User);
 
 module.exports = function(db) {
     var User = db.define('User', {

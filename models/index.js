@@ -16,6 +16,7 @@ var User = require('./user')(twitterjsDB);
 User.hasMany(Tweet);
 Tweet.belongsTo(User);
 
+
 // open the connection to our database
 twitterjsDB
   .authenticate()
@@ -41,6 +42,19 @@ twitterjsDB
 // User.findOne().then(function (user) {
 //     console.log(user.dataValues);
 // });
+
+// Tweet.findOne().then(function (tweet) {
+//     return tweet.getUser();
+// })
+// .then(function (user) {
+//    console.log(JSON.stringify(user)); // another way of just logging the plain old values
+// });
+
+// Tweet.findAll({include: [{model: User, where: {name: "Zeke"}}]}).then(function(tweets){
+// 	console.log(JSON.stringify(tweets));
+// });
+
+
 
   module.exports = {
     User: User,

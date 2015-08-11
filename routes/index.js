@@ -1,4 +1,5 @@
 var tweetBank = require('../tweetBank');
+var model = require('../models/index');
 
 module.exports = function (io) {
 	var router = require('express').Router();
@@ -6,37 +7,72 @@ module.exports = function (io) {
 	router.get('/', function (req, res) {
 		// will trigger res.send of the index.html file
 		// after rendering with swig.renderFile
-		res.render('index', {
-			showForm: true,
-			title: 'Home',
-			tweets: tweetBank.list()
+		model.Tweet.findAll({include: [model.User]})
+		.then(function(tweets)
+		{
+			res.render('index', {
+				showForm: true,
+				title: 'Home',
+				tweets:  tweets
+			});
 		});
+
 	});
 
 	router.get('/users/:name', function (req, res) {
-		var userTweets = tweetBank.find({
-			name: req.params.name
-		});
-		res.render('index', {
+		// var userTweets = tweetBank.find({
+		// 	name: req.params.name
+		// });
+	var theName = req.params.name;
+
+		model.Tweet.findAll({include: [{model: model.User, where: {name: theName}}]})
+		.then(function(userTweets){
+			res.render('index', {
 			showForm: true,
-			title: req.params.name,
+			title: theName,
 			tweets: userTweets,
-			theName: req.params.name
+			theName: theName
 		});
+		})
 	});
 
 	router.get('/users/:name/tweets/:id', function (req, res) {
 		var id = parseInt(req.params.id);
-		var theTweet = tweetBank.find({
-			id: id
-		});
-		res.render('index', {title: req.params.name, tweets: theTweet})
+		var name = req.params.name;
+
+		model.Tweet.findAll({
+			include: [{
+				model: model.User,
+				where: {name: name}
+			}], 
+			where: {id: id}
+		})
+		.then(function(tweets){
+		res.render('index', {title: name, tweets: tweets});
 	});
+});
 
 	router.post('/submit', function (req, res) {
-		tweetBank.add(req.body.shenanigans, req.body.text);
-		var theNewTweet = tweetBank.list().pop();
-		io.sockets.emit('new_tweet', theNewTweet);
+		var userName = req.body.shenanigans;
+		var tweet = req.body.text;
+		model.User.findOrCreate({where: {name: userName}})
+  			.spread(function(user, created) {
+  					console.log(user.get({
+      					plain: true
+    		 		}).id);
+  				return user.get({
+      					plain: true
+    		 		}).id;
+      	}).then(function(userId){
+      		return model.Tweet.create({ id: null, UserId: userId, tweet: tweet});
+
+      	}).then(console.log)
+      	.catch(console.log);
+
+  
+		//var theNewTweet = tweetBank.list().pop();
+
+		//io.sockets.emit('new_tweet', theNewTweet);
 		res.redirect('/');
 	});
 	return router;
